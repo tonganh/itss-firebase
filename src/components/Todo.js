@@ -9,11 +9,11 @@ import Filter from './Filter';
 import useStorage from '../hooks/storage';
 
 /* ライブラリ */
-import {getKey} from "../lib/util";
+import { getKey } from "../lib/util";
 
 function Todo() {
-  const [items, putItems, clearItems] = useStorage();
-  
+  const [items, putItems, clearItems, updateItem] = useStorage();
+
   const [filter, setFilter] = React.useState('ALL');
 
   const displayItems = items.filter(item => {
@@ -21,21 +21,19 @@ function Todo() {
     if (filter === 'TODO') return !item.done;
     if (filter === 'DONE') return item.done;
   });
-  
-  const handleCheck = checked => {
-    const newItems = items.map(item => {
-      if (item.key === checked.key) {
-        item.done = !item.done;
-      }
-      return item;
-    });
-    putItems(newItems);
+
+  const handleCheck = async (checked) => {
+    await updateItem(checked)
   };
-  
-  const handleAdd = text => {
-    putItems([...items, { key: getKey(), text, done: false }]);
+
+  // const handleAdd = text => {
+  //   putItems([...items, { key: getKey(), text, done: false }]);
+  // };
+
+  const handleAdd = async (text) => {
+    await putItems({ key: getKey(), text, done: false });
   };
-  
+
   const handleFilterChange = value => setFilter(value);
 
   return (
@@ -54,7 +52,7 @@ function Todo() {
         value={filter}
       />
       {displayItems.map(item => (
-        <TodoItem 
+        <TodoItem
           key={item.key}
           item={item}
           onCheck={handleCheck}
@@ -64,7 +62,9 @@ function Todo() {
         {displayItems.length} items
       </div>
       <div className="panel-block">
-        <button className="button is-light is-fullwidth" onClick={clearItems}>
+        <button className="button is-light is-fullwidth" onClick={async () => {
+          await clearItems()
+        }}>
           全てのToDoを削除
         </button>
       </div>

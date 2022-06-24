@@ -12,3 +12,28 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig)
+
+export const getAllDataInCollection = async () => {
+    const testData = (await firebase.firestore().collection("todos").get()).docs.map(e => {
+        const { text, done } = e.data()
+        return {
+            key: e.id,
+            text, done
+        }
+    })
+    return testData
+}
+
+export const addNewDataInCollection = async (data) => {
+    await firebase.firestore().collection("todos").add(data)
+}
+
+export const updateItemFirebase = async (data) => {
+    await firebase.firestore().collection("todos").doc(data.key).update(data)
+}
+
+export const deleteAllItemsFirebase = async (listIds) => {
+    await Promise.all(listIds.map(async e => {
+        await firebase.firestore().collection("todos").doc(e).delete()
+    }))
+}
