@@ -13,8 +13,10 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig)
 
+const db = firebase.firestore()
+
 export const getAllDataInCollection = async () => {
-    const testData = (await firebase.firestore().collection("todos").get()).docs.map(e => {
+    const testData = (await db.collection("todos").get()).docs.map(e => {
         const { text, done } = e.data()
         return {
             key: e.id,
@@ -24,16 +26,32 @@ export const getAllDataInCollection = async () => {
     return testData
 }
 
-export const addNewDataInCollection = async (data) => {
-    await firebase.firestore().collection("todos").add(data)
+export const addNewDataInCollection = async (data, collectionName = "todos") => {
+    await db.collection(collectionName).add(data)
 }
 
-export const updateItemFirebase = async (data) => {
-    await firebase.firestore().collection("todos").doc(data.key).update(data)
+export const updateItemFirebase = async (data, collectioName = "todos") => {
+    await db.collection(collectioName).doc(data.key).update(data)
 }
 
 export const deleteAllItemsFirebase = async (listIds) => {
     await Promise.all(listIds.map(async e => {
-        await firebase.firestore().collection("todos").doc(e).delete()
+        await db.collection("todos").doc(e).delete()
     }))
+}
+
+export const saveUserInformation = async (user) => {
+    const { uid } = user
+    const dataUserAfterSigned = (await db.collection("users").doc(uid).get()).data()
+    // ! case user have not in database, so we need save this user to database
+    if (!dataUserAfterSigned) {
+        await db.collection("users").doc(uid).set({
+            nameDisplay: user.displayName
+        })
+        return {
+            nameDisplay: user.displayName
+        }
+    } else {
+        return dataUserAfterSigned
+    }
 }
