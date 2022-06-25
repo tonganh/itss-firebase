@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import Todo from './components/Todo';
 import './styles/main.css';
+import { saveUserInformation } from './lib/firebase'
 /* スタイルシート */
 
 const firebaseConfig = {
@@ -37,7 +38,8 @@ function App() {
 
   // Listen to the Firebase Auth state and set the local state.
   useEffect(() => {
-    const unregisterAuthObserver = firebase.auth().onAuthStateChanged(user => {
+    const unregisterAuthObserver = firebase.auth().onAuthStateChanged(async (user) => {
+      await saveUserInformation(user)
       setIsSignedIn(!!user);
     });
     return () => unregisterAuthObserver(); // Make sure we un-register Firebase observers when the component unmounts.
