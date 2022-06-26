@@ -41,9 +41,11 @@ function App() {
   // Listen to the Firebase Auth state and set the local state.
   useEffect(() => {
     const unregisterAuthObserver = firebase.auth().onAuthStateChanged(async (user) => {
-      const dataUserAfterLogin = await saveUserInformation(user)
-      setUserAfterLogin(dataUserAfterLogin)
-      setIsSignedIn(!!dataUserAfterLogin);
+      if (user) {
+        const dataUserAfterLogin = await saveUserInformation(user)
+        setUserAfterLogin(dataUserAfterLogin)
+        setIsSignedIn(!!dataUserAfterLogin);
+      }
     });
     return () => unregisterAuthObserver(); // Make sure we un-register Firebase observers when the component unmounts.
   }, []);
@@ -70,7 +72,10 @@ function App() {
         {userAfterLogin.name}
       </div>
 
-      <a onClick={() => firebase.auth().signOut()}>Logout</a>
+      <a onClick={() => {
+        firebase.auth().signOut()
+        setIsSignedIn(false)
+      }}>Logout</a>
       <Todo />
     </div>
   );
