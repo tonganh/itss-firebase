@@ -2,8 +2,9 @@ import firebase from 'firebase/compat/app';
 import React, { useEffect, useState } from 'react'
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import Todo from './components/Todo';
+import Upload from './components/Upload'
 import './styles/main.css';
-import { saveUserInformation } from './lib/firebase'
+import { saveUserInformation, updateUserInformation } from './lib/firebase'
 /* スタイルシート */
 
 const firebaseConfig = {
@@ -35,15 +36,22 @@ const uiConfig = {
 function App() {
 
   const [isSignedIn, setIsSignedIn] = useState(false); // Local signed-in state.
+  const [userAfterLogin, setUserAfterLogin] = useState(null)
 
   // Listen to the Firebase Auth state and set the local state.
   useEffect(() => {
     const unregisterAuthObserver = firebase.auth().onAuthStateChanged(async (user) => {
-      await saveUserInformation(user)
-      setIsSignedIn(!!user);
+      const dataUserAfterLogin = await saveUserInformation(user)
+      setUserAfterLogin(dataUserAfterLogin)
+      setIsSignedIn(!!dataUserAfterLogin);
     });
     return () => unregisterAuthObserver(); // Make sure we un-register Firebase observers when the component unmounts.
   }, []);
+
+  const handleImageChanged = async imgUrl => {
+    await updateUserInformation(userAfterLogin, imgUrl);
+  }
+
 
   if (!isSignedIn) {
     return (
@@ -55,7 +63,13 @@ function App() {
 
   return (
     <div className="container is-fluid">
+
       <p>{firebase.auth().currentUser.displayName}</p>
+      <div class="navbar-item">
+        <Upload userImage={userAfterLogin.image} onSelectedImage={handleImageChanged} userAfterLogin={userAfterLogin} />
+        {userAfterLogin.name}
+      </div>
+
       <a onClick={() => firebase.auth().signOut()}>Logout</a>
       <Todo />
     </div>

@@ -1,6 +1,7 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDE0ZRKjIjWUn9JfCcT-WGjOYJEgFpINXM",
@@ -11,7 +12,7 @@ const firebaseConfig = {
     appId: "1:355192140055:web:a860f5dbec305f68e9c752"
 };
 
-firebase.initializeApp(firebaseConfig)
+const app = firebase.initializeApp(firebaseConfig)
 
 const db = firebase.firestore()
 
@@ -49,9 +50,34 @@ export const saveUserInformation = async (user) => {
             nameDisplay: user.displayName
         })
         return {
-            nameDisplay: user.displayName
+            nameDisplay: user.displayName,
+            id: uid
         }
     } else {
-        return dataUserAfterSigned
+        return {
+            ...dataUserAfterSigned, id: uid
+        }
     }
 }
+
+export const updateUserInformation = async (user, img) => {
+    try {
+        const userDoc = await db.collection("users").doc(user.id).get();
+        if (userDoc.exists) {
+            await db.collection("users").doc(user.id).update({ ...userDoc.data(), image: img });
+        }
+    } catch (err) {
+        console.log("🚀 ~ file: firebase.js ~ line 66 ~ updateUserInformation ~ err", err)
+    }
+}
+
+export const uploadImage = async (image, userAfterLogin) => {
+    console.log("🚀 ~ file: firebase.js ~ line 75 ~ uploadImage ~ userAfterLogin", userAfterLogin)
+    // Create a root reference
+    const storage = getStorage(app);
+    // Create a reference to 'mountains.jpg'
+    const mountainsRef = ref(storage, `images/${image.name}`);
+    await uploadBytesResumable(mountainsRef, image)
+    const imageUrl = await getDownloadURL(mountainsRef)
+    return imageUrl
+};
